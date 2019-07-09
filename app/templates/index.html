@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ user.username }}!</h1>
+    {% if not current_user.is_anonymous %}
+    <h3>Welcome back, {{ current_user.firstname }}!</h3>
+    {% else %}
+    <h3>Hi</h3>
+    {% endif %}
     {% for post in posts %}
     <div><p>{{ post.author.username }} says: <b>{{ post.body }}</b></p></div>
     {% endfor %}

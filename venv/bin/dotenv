@@ -1,5 +1,4 @@
-#!/home/pi/website/venv/bin/python3
-
+#!/home/pi/website/venv/bin/python2
 # -*- coding: utf-8 -*-
 import re
 import sys

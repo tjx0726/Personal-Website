@@ -74,8 +74,3 @@ fi
 if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
     hash -r
 fi
-export LC_ALL=C.UTF-8
-export LANG=C.UTF-8
-export FLASK_APP=website.py
-export FLASK_ENV=development
-export FLASK_DEBUG=1

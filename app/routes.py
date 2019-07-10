@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, request
 from app.forms import LoginForm, RegistrationForm
 # user db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User
+from app.models import User, Mat
 
 
 @app.route('/')
@@ -39,13 +39,15 @@ def login():
 
     return render_template('login.html', title='Sign In', form=form)
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        new_user = User(username=form.username.data, email=form.email.data, firstname=form.firstname.data, lastname=form.lastname.data)
+        new_user = User(username=form.username.data, email=form.email.data,
+                        firstname=form.firstname.data, lastname=form.lastname.data)
         new_user.set_password(form.password.data)
         db.session.add(new_user)
         db.session.commit()
@@ -53,6 +55,13 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html', title='Register', form=form)
+
+@app.route('/mat')
+@login_required
+def mat():
+    mats = Mat.query.order_by(Mat.name.desc()).all()
+    mat_papers=[p.get_dict() for p in mats]
+    return render_template('mat.html', title='MAT', papers=mat_papers)
 
 
 @app.route('/logout')

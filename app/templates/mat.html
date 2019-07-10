@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>MAT Papers</h2>
+    {% for paper in papers %}
+        <div class = 'row'>
+            <div class = 'col'><p><u><a href="{{ url_for('static', filename=paper.paper_path) }}">{{ paper.name }}</u></p></div>
+            <div class = 'col'><p><u><a href="{{ url_for('static', filename=paper.answer_path) }}">{{ 'Solutions - '+paper.name }}</u></p></div>
+        </div>
+    {% endfor %}
+{% endblock%}

@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -63,14 +62,14 @@
                         <a href="#">Portfolio</a>
                     </li>
                     <li>
-                        <a href="#">Contact</a>
+                        <a href="{{ url_for('mat') }}">MAT</a>
                     </li>
                 </ul>
 
             </nav>
             <!-- Page Content -->
             <div id="content">
-                <h1>Oxbridge Computer Science Application Course</h1>
+                <h1>Oxbridge CS Application Course</h1>
 
                 <nav class="navbar navbar-expand-lg navbar-light bg-light">
                     <div class="container-fluid">
@@ -129,6 +128,7 @@
 
         <script type="text/javascript">
             $(document).ready(function () {
+
                 $('#sidebarCollapse').on('click', function () {
                     $('#sidebar').toggleClass('active');
                     $(this).toggleClass('active');

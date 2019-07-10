@@ -39,3 +39,19 @@ class Post(db.Model):
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+#mat data
+class Mat(db.Model):
+    name = db.Column(db.String(20), primary_key=True)
+    paper_path = db.Column(db.String(128))
+    answer_path = db.Column(db.String(128))
+
+    def __repr__(self):
+        return '<MAT Paper {}>'.format(self.name)
+    def get_dict(self):
+        res = {}
+        res['name'] = self.name
+        res['paper_path'] = self.paper_path
+        res['answer_path'] = self.answer_path
+        return res
+        

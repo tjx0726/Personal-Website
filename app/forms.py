@@ -1,7 +1,7 @@
 #forms
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, AnyOf
 from app.models import User
 
 class LoginForm(FlaskForm):
@@ -14,6 +14,13 @@ class PostForm(FlaskForm):
     post = StringField('Message', validators=[DataRequired(), Length(max=1000,
         message='Messages may not contain more than 1000 characters.')])
     submit = SubmitField('Submit')
+
+class DeleteUserSub(FlaskForm):
+    confirm = StringField("Type in 'DELETE' to confirm.", validators=[DataRequired(), AnyOf(['DELETE'])])
+    submit = SubmitField('Confirm')
+
+class DeletePostSub(FlaskForm):
+    submit = SubmitField('Confirm')
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(),

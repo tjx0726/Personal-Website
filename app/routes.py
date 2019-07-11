@@ -2,7 +2,7 @@ import os
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request, send_from_directory
 from werkzeug.urls import url_parse
-from app.forms import LoginForm, RegistrationForm, PostForm
+from app.forms import LoginForm, RegistrationForm, PostForm, DeleteUserSub, DeletePostSub
 # user db
 from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User, Mat, Post
@@ -55,7 +55,7 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and not current_user.is_admin:
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -67,6 +67,10 @@ def register():
             new_user.mats.append(paper)
         db.session.add(new_user)
         db.session.commit()
+        if current_user.is_admin:
+            new_user.post('Hi')
+            flash('You have added a new user {}.'.format(new_user.username))
+            return redirect(url_for('user_management'))
         new_user.post('Hi everyone, I have registered this account.')
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
@@ -186,16 +190,62 @@ def admin_requirement(f):
             else:
                 flash('You have no access to admin contents.')
                 return redirect(url_for('index'))
-        except:
-            flash('You have no access to admin contents.')
+        except Exception as e:
+            print(e)
+            flash(e.args)
             return redirect(url_for('index'))
     return wrap
 
 
-@app.route('/user_management', methods=['GET', 'POST'])
+@app.route('/user_management')
 @login_required
 @admin_requirement
 def user_management():
     users = User.query.order_by(User.id).all()
     return render_template('user_management.html', title='User Management',
                            users=users)
+
+@app.route('/user_management/delete/<username>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def delete_user_confirm(username):
+    form = DeleteUserSub()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=username).first_or_404()
+        user.delete()
+        flash('User {} has been deleted.'.format(username))
+        return redirect(url_for('user_management'))
+    return render_template('delete_user_confirm.html', title='Delete User {}'.format(username), form=form)
+
+
+@app.route('/user_management/delete_user_post/<username>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def delete_user_post_confirm(username):
+    form = DeletePostSub()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=username).first_or_404()
+        user.delete_posts()
+        flash('Messages posted by user {} has been deleted.'.format(username))
+        return redirect(url_for('user_management'))
+    return render_template('delete_user_post_confirm.html', title='Delete Posts by {}'.format(username), form=form)
+
+
+@app.route('/user_management/change_admin/<username>')
+@login_required
+@admin_requirement
+def change_admin(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    user.change_admin()
+    return redirect(url_for('user_management'))
+
+@app.route('/student_management', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def student_management():
+    students = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    return render_template('student_management.html', title='Student Management',
+                           students=students)
+
+
+

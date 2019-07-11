@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h3>Users Management</h3>
+<h3>User Management</h3> <a href="{{ url_for('register') }}"><u>Add a New User</u> </a>
     <table class="table">
         <thead>
         <tr>
@@ -19,13 +19,13 @@
             <th scope="row">{{ u.id }}</th>
             <td>
                 <u><a href="{{ url_for('user_default', username=u.username) }}">
-                            {{u.firstname}} {{u.lastname}}</a></u>
+                            {{u.username}} </a></u>
                 {% if u.is_admin %} 
                 <span class="badge badge-pill badge-primary">admin </span>
                 {% endif %} 
             </td>
             <td>
-            <u><a href="#">
+                <u><a href="{{ url_for('change_admin', username=u.username) }}">
                 {% if u.is_admin%}
                 Disable Admin
                 {% else %}
@@ -34,14 +34,14 @@
                 </a></u>
             </td>
             <td>
-            <u><a href='#'>
+                <u><a href='{{url_for('delete_user_post_confirm', username=u.username)}}'>
                         Delete All Posts
-                </u></a>
+                </a></u>
             </td>
             <td>
-            <u><a href='#'>
+                <u><a href="{{url_for('delete_user_confirm', username=u.username)}}">
                         Delete Account
-                </u></a>
+                </a></u>
             </td>
         </tr>
     {% endfor %}

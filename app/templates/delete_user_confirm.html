@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class = "alert alert-danger" role = "alert">
+    <h3 class = "alert-heading"> Warning! Deleting a user is not recoverable. Are you sure? </h3>
+
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.confirm.label }}<br>
+            {{ form.confirm(size=10) }}<br>
+            {% for error in form.confirm.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }} Back to <a href = "{{ url_for('user_management') }}"><u>Student Management</u></a></p>
+    </form>
+</div>
+
+{% endblock %}

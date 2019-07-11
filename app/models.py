@@ -52,6 +52,25 @@ class User(UserMixin, db.Model):
         self.is_admin = True
         db.session.commit()
 
+    def disable_admin(self):
+        self.is_admin = False
+        db.session.commit()
+
+    def change_admin(self):
+        if self.is_admin:
+            self.disable_admin()
+        else:
+            self.set_admin()
+
+    def delete(self):
+        self.delete_posts()
+        db.session.delete(self)
+        db.session.commit()
+
+    def delete_posts(self):
+        for p in self.posts:
+            p.delete()
+
     def add_mat_name(self, paper_name):
         assert(isinstance(paper_name, str))
         papers = Mat.query.filter(Mat.name.contains(paper_name))
@@ -86,6 +105,10 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     # foreign key referenced to user.id
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
 
     def __repr__(self):
         return '<Post "{}" by: {}>'.format(self.body, self.author.username)

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Student Management</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Student</th>
+            <th scope="col">PS</th>
+            <th scope="col">MAT</th>
+
+        </tr>
+        </thead>
+        <tbody>
+    {% for u in students %}
+        <tr>
+            <th scope="row">{{ u.id }}</th>
+            <td>
+                <u><a href="{{ url_for('user_default', username=u.username) }}">
+                            {{u.firstname}} {{u.lastname}}</a></u>
+                {% if u.is_admin %} 
+                <span class="badge badge-pill badge-primary">admin </span>
+                {% endif %} 
+            </td>
+            <td>
+            <u><a href="#">
+                    View PS
+                </a></u>
+            </td>
+            <td>
+            <u><a href='#'>
+                    View MAT
+                </a></u>
+            </td>
+        </tr>
+    {% endfor %}
+        </tbody>
+
+    </table>
+{% endblock%}

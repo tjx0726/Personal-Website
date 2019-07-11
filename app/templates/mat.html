@@ -4,8 +4,15 @@
     <h2>MAT Papers</h2>
     {% for paper in papers %}
         <div class = 'row'>
-            <div class = 'col'><p><u><a href="{{ url_for('static', filename=paper.paper_path) }}">{{ paper.name }}</u></p></div>
-            <div class = 'col'><p><u><a href="{{ url_for('static', filename=paper.answer_path) }}">{{ 'Solutions - '+paper.name }}</u></p></div>
+            <div class = 'col'><p><u><a href="{{ url_for('mat_files',
+            filename=paper.paper_path) }}">{{ paper.name }}</a></u></p></div>
+            {% if paper in current_user.mats or current_user.is_admin%}
+                <div class = 'col'><p><u><a href="{{ url_for('mat_files',
+                        filename=paper.answer_path) }}">{{ 'Solutions -
+                        '+paper.name }}</a></u></p></div>
+            {% else %}
+                <div class = 'col'><p>{{ 'Solutions - '+paper.name }}</p></div>
+            {% endif %}
         </div>
     {% endfor %}
 {% endblock%}

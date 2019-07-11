@@ -1,5 +1,6 @@
+import os
 from app import app, db
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, send_from_directory
 from werkzeug.urls import url_parse
 from app.forms import LoginForm, RegistrationForm, PostForm
 # user db
@@ -7,6 +8,22 @@ from flask_login import current_user, login_user, logout_user, login_required
 from app.models import User, Mat, Post
 
 per_page = 10
+
+
+@app.route('/protected/files/mat/<filename>')
+@login_required
+def mat_files(filename):
+    allowed = False
+    for p in current_user.mats:
+        if p.answer_path == '/files/mat/'+filename:
+            allowed = True
+    if 'websolutions' in filename and not allowed and not current_user.is_admin:
+        flash("You don't have access to {}".format(filename))
+        return redirect('mat')
+    else:
+        return send_from_directory(
+            os.path.join(app.instance_path, 'protected/files/mat'),
+            filename)
 
 
 @app.route('/')
@@ -45,6 +62,9 @@ def register():
         new_user = User(username=form.username.data, email=form.email.data,
                         firstname=form.firstname.data, lastname=form.lastname.data)
         new_user.set_password(form.password.data)
+        specs = Mat.query.filter(Mat.name.contains('Spec')).all()
+        for paper in specs:
+            new_user.mats.append(paper)
         db.session.add(new_user)
         db.session.commit()
         new_user.post('Hi everyone, I have registered this account.')
@@ -64,8 +84,7 @@ def logout():
 @app.route('/mat')
 @login_required
 def mat():
-    mats = Mat.query.order_by(Mat.name.desc()).all()
-    mat_papers = [p.get_dict() for p in mats]
+    mat_papers = Mat.query.order_by(Mat.name.desc()).all()
     return render_template('mat.html', title='MAT', papers=mat_papers)
 
 

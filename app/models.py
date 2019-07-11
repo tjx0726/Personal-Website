@@ -7,6 +7,20 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+# Association for User-Mat many to many relationship
+user_mat_association = db.Table('UserMat',
+                                db.metadata,
+                                db.Column('user_id',
+                                          db.Integer,
+                                          db.ForeignKey('user.id')
+                                          ),
+                                db.Column('mat_name',
+                                          db.String(20),
+                                          db.ForeignKey('mat.name')
+                                          )
+                                )
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -18,6 +32,7 @@ class User(UserMixin, db.Model):
     # one-many relationship. put relationship on the "one" side
     # u.posts.all() can be used to query all posts by a user
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    mats = db.relationship('Mat', secondary=user_mat_association)
 
     def __repr__(self):
         return '<User {}, {} {}>'.format(self.username, self.firstname, self.lastname)
@@ -37,6 +52,28 @@ class User(UserMixin, db.Model):
         self.is_admin = True
         db.session.commit()
 
+    def add_mat_name(self, paper_name):
+        assert(isinstance(paper_name, str))
+        papers = Mat.query.filter(Mat.name.contains(paper_name))
+        for paper in papers:
+            self.add_mat(paper)
+
+    def add_mat(self, paper):
+        if paper not in self.mats:
+            self.mats.append(paper)
+            db.session.commit()
+
+    def remove_mat_name(self, paper_name):
+        assert(isinstance(paper_name, str))
+        papers = Mat.query.filter(Mat.name.contains(paper_name))
+        for paper in papers:
+            self.remove_mat(paper)
+
+    def remove_mat(self, paper):
+        if paper in self.mats:
+            self.mats.remove(paper)
+            db.session.commit()
+
 
 @login.user_loader
 def load_user(id):
@@ -55,8 +92,6 @@ class Post(db.Model):
 
 
 # mat data
-
-
 class Mat(db.Model):
     name = db.Column(db.String(20), primary_key=True)
     paper_path = db.Column(db.String(128))

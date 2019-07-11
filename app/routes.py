@@ -1,22 +1,18 @@
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request
-from app.forms import LoginForm, RegistrationForm
+from werkzeug.urls import url_parse
+from app.forms import LoginForm, RegistrationForm, PostForm
 # user db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, Mat
+from app.models import User, Mat, Post
+
+per_page = 10
 
 
 @app.route('/')
 @app.route('/index')
 def index():
-    user = {'username': 'Tony'}
-    posts = [
-        {'author': {'username': 'John'},
-         'body': "123"},
-        {'author': {'username': 'Neil'},
-         'body': "456"}
-    ]
-    return render_template('index.html', title='Home', posts=posts)
+    return render_template('index.html', title='Home')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -51,17 +47,11 @@ def register():
         new_user.set_password(form.password.data)
         db.session.add(new_user)
         db.session.commit()
+        new_user.post('Hi everyone, I have registered this account.')
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
 
     return render_template('register.html', title='Register', form=form)
-
-@app.route('/mat')
-@login_required
-def mat():
-    mats = Mat.query.order_by(Mat.name.desc()).all()
-    mat_papers=[p.get_dict() for p in mats]
-    return render_template('mat.html', title='MAT', papers=mat_papers)
 
 
 @app.route('/logout')
@@ -69,3 +59,98 @@ def logout():
     logout_user()
     flash('You have successfully logged out.')
     return redirect(url_for('index'))
+
+
+@app.route('/mat')
+@login_required
+def mat():
+    mats = Mat.query.order_by(Mat.name.desc()).all()
+    mat_papers = [p.get_dict() for p in mats]
+    return render_template('mat.html', title='MAT', papers=mat_papers)
+
+
+@app.route('/user/<username>/<page>')
+@login_required
+def user(username, page):
+    user = User.query.filter_by(username=username).first_or_404()
+    num_posts = user.posts.count()
+    total_page = (num_posts-1)/per_page + 1
+    if num_posts == 0:
+        return redirect(url_for('user_default', username=username))
+    if not page.isdigit():
+        return redirect(url_for('index'))
+    elif 0 < int(page) <= total_page:
+        all_posts = user.posts.order_by(Post.timestamp.desc()).all()
+        page = int(page)
+        return render_template('user.html', title=username, user=user,
+                               posts=all_posts[per_page *
+                                               (page-1):min(per_page*(page), num_posts)],
+                               page=page, total_page=total_page)
+    elif page == '0':
+        return redirect(url_for('user', username=username, page=1))
+    else:
+        return redirect(url_for('user', username=username, page=total_page))
+
+
+@app.route('/user')
+@login_required
+def user_no():
+    username = current_user.username
+    return redirect(url_for('user_default', username=username))
+
+
+@app.route('/user/<username>')
+@login_required
+def user_default(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    num_posts = user.posts.count()
+    if num_posts == 0:
+        return render_template('user.html', title=username, user=user, posts=[], page=0,
+                               total_page=0)
+    else:
+        return redirect(url_for('user', username=username, page=1))
+
+
+@app.route('/discussion/<page>')
+@login_required
+def discussion(page):
+    num_posts = Post.query.count()
+    total_page = (num_posts-1)/per_page+1
+    if num_posts == 0:
+        return redirect(url_for('discussion_no_page'))
+    if not page.isdigit():
+        return redirect(url_for('index'))
+    elif 0 < int(page) <= total_page:
+        all_posts = Post.query.order_by(Post.timestamp.desc()).all()
+        page = int(page)
+        return render_template('discussion.html', title='Discussion Panel',
+                               posts=all_posts[per_page *
+                                               (page-1):min(per_page*(page), num_posts)],
+                               page=page, total_page=total_page)
+    elif page == '0':
+        return redirect(url_for('discussion', page=1))
+    else:
+        return redirect(url_for('discussion', page=total_page))
+
+
+@app.route('/discussion')
+@login_required
+def discussion_no_page():
+    num_posts = Post.query.count()
+    if num_posts == 0:
+        return render_template('discussion.html', title='Discussion Panel', posts=[], page=0,
+                               total_page=1)
+    else:
+        return redirect(url_for('discussion', page=1))
+
+
+@app.route('/post', methods=['GET', 'POST'])
+@login_required
+def post():
+    form = PostForm()
+    if form.validate_on_submit():
+        user = current_user
+        user.post(form.post.data)
+        flash('You have posted a new message')
+        return redirect(url_for('discussion', page=1))
+    return render_template('post.html', title='Post a Message', form=form)

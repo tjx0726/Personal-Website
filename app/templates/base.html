@@ -12,9 +12,9 @@
         <link rel="stylesheet" href="{{  url_for('static', filename='scripts/css/bootstrap.min.css') }}">
         <link rel="stylesheet" href="{{  url_for('static', filename='scripts/css/style5.css') }}">
         <!-- Font Awesome JS -->
-        <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"></script>
-        <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"></script>
-
+        <script defer src="{{ url_for('static', filename='scripts/js/solid.js') }}"></script>
+        <script defer src="{{ url_for('static', filename='scripts/js/fontawesome.js') }}"></script>
+        <script src="{{ url_for('static', filename='scripts/js/moment.js') }}"></script>
 
     </head>
     <body>
@@ -59,10 +59,10 @@
                         </ul>
                     </li>
                     <li>
-                        <a href="#">Portfolio</a>
+                        <a href="{{ url_for('mat') }}">MAT</a>
                     </li>
                     <li>
-                        <a href="{{ url_for('mat') }}">MAT</a>
+                        <a href="{{ url_for('discussion_no_page') }}">Discussion Panel</a>
                     </li>
                 </ul>
 
@@ -88,11 +88,13 @@
                                     <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ url_for('register') }}">Sign Up</a>
+                                    <a class="nav-link" href="{{
+                                        url_for('register') }}">Register</a>
                                 </li>
                                 {% else %}
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#"><u>{{current_user.username}}</u></a>
+                                    <a class="nav-link" href="{{
+                                        url_for('user_default', username=current_user.username)}}"><u>{{current_user.username}}</u></a>
 
                                 </li>
                                 <li class="nav-item">
@@ -113,7 +115,11 @@
                 {% endif %}
                 {% endwith %}
                 <hr>
-                {% block content %}{% endblock %}
+
+                {% block content %}
+
+                
+                {% endblock %}
             </div>
         </div>
 

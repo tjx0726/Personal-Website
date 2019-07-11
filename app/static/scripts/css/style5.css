@@ -7,6 +7,7 @@
 body {
     font-family: 'Poppins', sans-serif;
     background: #fafafa;
+    word-wrap: break-word;
 }
 
 p {
@@ -22,6 +23,8 @@ a, a:hover, a:focus {
     text-decoration: none;
     transition: all 0.3s;
 }
+
+.break-text{word-wrap: break-word;}
 
 .navbar {
     padding: 15px 10px;

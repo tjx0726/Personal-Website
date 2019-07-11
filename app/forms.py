@@ -1,7 +1,7 @@
 #forms
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 from app.models import User
 
 class LoginForm(FlaskForm):
@@ -10,11 +10,20 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
+class PostForm(FlaskForm):
+    post = StringField('Message', validators=[DataRequired(), Length(max=1000,
+        message='Messages may not contain more than 1000 characters.')])
+    submit = SubmitField('Submit')
+
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    firstname = StringField('Firstname', validators=[DataRequired()])
-    lastname = StringField('Lastname', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    username = StringField('Username', validators=[DataRequired(),
+        Length(max=64)])
+    firstname = StringField('First Name', validators=[DataRequired(),
+        Length(max=64)])
+    lastname = StringField('Last Name', validators=[DataRequired(),
+        Length(max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email(),
+        Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])

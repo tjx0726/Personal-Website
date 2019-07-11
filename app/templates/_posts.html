@@ -1,0 +1,17 @@
+{% if posts|length == 0%}
+    There is no post yet.
+{% else %}
+    {% for post in posts %}
+        <b>{{post.author.firstname}} {{post.author.lastname}} </b>({{
+        post.author.username}}) <span class='datetime'>{{post.timestamp}}</span><br> 
+        <div class="row-12 container break-text">{{ post.body }}</div>
+        <hr>
+    {% endfor %}
+{% endif %}
+<script>
+var ds = document.getElementsByClassName("datetime")
+for (var i = 0; i < ds.length; i++) {
+    var d = ds[i]
+    d.innerHTML = moment(d.textContent).format('LLL');
+}
+</script>

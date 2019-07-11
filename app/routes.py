@@ -103,7 +103,8 @@ def user(username, page):
         page = int(page)
         return render_template('user.html', title=username, user=user,
                                posts=all_posts[per_page *
-                                               (page-1):min(per_page*(page), num_posts)],
+                                               (page-1):min(per_page*(page),
+                                                            num_posts)],
                                page=page, total_page=total_page)
     elif page == '0':
         return redirect(url_for('user', username=username, page=1))
@@ -124,8 +125,8 @@ def user_default(username):
     user = User.query.filter_by(username=username).first_or_404()
     num_posts = user.posts.count()
     if num_posts == 0:
-        return render_template('user.html', title=username, user=user, posts=[], page=0,
-                               total_page=0)
+        return render_template('user.html', title=username, user=user,
+                               posts=[], page=0, total_page=0)
     else:
         return redirect(url_for('user', username=username, page=1))
 
@@ -173,3 +174,28 @@ def post():
         flash('You have posted a new message')
         return redirect(url_for('discussion', page=1))
     return render_template('post.html', title='Post a Message', form=form)
+
+
+def admin_requirement(f):
+    from functools import wraps
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        try:
+            if current_user.is_admin:
+                return f(*args, **kwargs)
+            else:
+                flash('You have no access to admin contents.')
+                return redirect(url_for('index'))
+        except:
+            flash('You have no access to admin contents.')
+            return redirect(url_for('index'))
+    return wrap
+
+
+@app.route('/user_management', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def user_management():
+    users = User.query.order_by(User.id).all()
+    return render_template('user_management.html', title='User Management',
+                           users=users)

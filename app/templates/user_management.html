@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Users Management</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">User</th>
+            <th scope="col">Admin</th>
+            <th scope="col">Posts</th>
+            <th scope="col">Account</th>
+
+        </tr>
+        </thead>
+        <tbody>
+    {% for u in users %}
+        <tr>
+            <th scope="row">{{ u.id }}</th>
+            <td>
+                <u><a href="{{ url_for('user_default', username=u.username) }}">
+                            {{u.firstname}} {{u.lastname}}</a></u>
+                {% if u.is_admin %} 
+                <span class="badge badge-pill badge-primary">admin </span>
+                {% endif %} 
+            </td>
+            <td>
+            <u><a href="#">
+                {% if u.is_admin%}
+                Disable Admin
+                {% else %}
+                Set Admin
+                {% endif%}
+                </a></u>
+            </td>
+            <td>
+            <u><a href='#'>
+                        Delete All Posts
+                </u></a>
+            </td>
+            <td>
+            <u><a href='#'>
+                        Delete Account
+                </u></a>
+            </td>
+        </tr>
+    {% endfor %}
+        </tbody>
+
+    </table>
+{% endblock%}
+

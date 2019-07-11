@@ -64,6 +64,24 @@
                     <li>
                         <a href="{{ url_for('discussion_no_page') }}">Discussion Panel</a>
                     </li>
+					{% if current_user.is_admin%}
+                    <li>
+                        <a href="#adminSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Admin Management</a>
+                        <ul class="collapse list-unstyled" id="adminSubmenu">
+                            <li>
+								<a href="{{ url_for('user_management')}}">User Management</a>
+                            </li>
+                            <li>
+                                <a href="#">MAT Management</a>
+                            </li>
+                            <li>
+                                <a href="#">Schedule Management</a>
+                            </li>
+                            <li>
+                                <a href="#">Review PS</a>
+                            </li>
+                    </li>
+					{% endif %}
                 </ul>
 
             </nav>

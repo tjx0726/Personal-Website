@@ -1,0 +1,48 @@
+                <td>
+                    <span class='datetime'>{{result['timestamp']}}</span>
+                </td>
+                <td>
+                    {{result['1']}}
+                </td>
+                <td>
+                    {{result['2']}}
+                </td>
+                <td>
+                    {{result['3']}}
+                </td>
+                <td>
+                    {{result['4']}}
+                </td>
+                <td>
+                    {{result['5']}}
+                </td>
+                <td>
+                    {{result['6']}}
+                </td>
+                <td>
+                    {{result['7']}}
+                </td>
+                <td>
+                    {{result['total']}}
+                </td>
+                {% if current_user.is_admin %}
+                <td>
+                <u><a href='{{ url_for('mat_result_edit', id=result["result_id"])}}'>
+                        edit
+                    </a></u>
+                </td>
+                <td>
+                <u><a href='{{ url_for('delete_mat_result_confirm',
+                        id=result['result_id'])}}'>
+                        delete
+                    </a></u>
+                </td>
+                {% endif %}
+
+<script>
+var ds = document.getElementsByClassName("datetime")
+for (var i = 0; i < ds.length; i++) {
+    var d = ds[i]
+    d.innerHTML = moment(d.textContent).format('LL');
+}
+</script>

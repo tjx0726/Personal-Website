@@ -15,6 +15,7 @@
         <script defer src="{{ url_for('static', filename='scripts/js/solid.js') }}"></script>
         <script defer src="{{ url_for('static', filename='scripts/js/fontawesome.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/js/moment.js') }}"></script>
+        <script>moment.locale('en-gb');</script>
 
     </head>
     <body>
@@ -45,21 +46,22 @@
                         <a href="#">About</a>
                     </li>
                     <li>
-                        <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Pages</a>
-                        <ul class="collapse list-unstyled" id="pageSubmenu">
+                        <a href="#matSubmenu" data-toggle="collapse"
+                            aria-expanded="false" class="dropdown-toggle">MAT</a>
+                        <ul class="collapse list-unstyled" id="matSubmenu">
                             <li>
-                                <a href="#">Page 1</a>
+                                <a href="{{ url_for('mat') }}">MAT Papers</a>
                             </li>
+                            {% if not current_user.is_anonymous and not
+                            current_user.is_admin %}
                             <li>
-                                <a href="#">Page 2</a>
+                                <a href="{{ url_for('mat_my_results')}}">My Results</a>
                             </li>
+                            {% endif %}
                             <li>
                                 <a href="#">Page 3</a>
                             </li>
                         </ul>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('mat') }}">MAT</a>
                     </li>
                     <li>
                         <a href="{{ url_for('discussion_no_page') }}">Discussion Panel</a>
@@ -75,10 +77,10 @@
 								<a href="{{ url_for('student_management')}}">Student Management</a>
                             </li>
                             <li>
-                                <a href="#">MAT Management</a>
+                                <a href="{{ url_for('mat_management')}}">MAT Management</a>
                             </li>
                             <li>
-                                <a href="#">Schedule Management</a>
+                                <a href="#">Timetable Management</a>
                             </li>
                             <li>
                                 <a href="#">Review PS</a>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>MAT Management: {{ user.firstname}} {{ user.lastname}}</h3>
+    {% for mat in mats%}
+        <h4 style="display:inline;">{{mat['name']}}</h4>
+        {% if current_user.is_admin %}
+        <a class="btn btn-outline-primary btn-sm" href="{{
+            url_for('mat_result_create_user', paper_name=mat['name'], username=user.username)}}" role="button">Create</a>
+        {% endif %}
+        {% if mat['results'] | length > 0%}
+        <table class="table">
+
+            <thead>
+            <tr>
+                {% include '_mat_results_table_display.html'%}
+            </tr>
+            </thead>
+            <tbody>
+        {% for result in mat['results']%}
+            <tr>
+                {% include '_mat_results_table_display2.html'%}
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <h5>Ther is no result yet.</h5>
+        {% endif %}
+        <hr>
+    {% endfor %}
+{% endblock%}

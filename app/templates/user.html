@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h3>User: {{ user.username }}</h3>
+    <h3>User: {{ user.firstname}} {{ user.lastname}} ({{ user.username }})</h3>
+    {% if current_user == user %}
     <h5>Your Posts:</h5> 
+    {% else %}
+    <h5>His/Her Posts:</h5> 
+    {% endif %}
     <hr>
     {% include '_posts.html' %}
     {% if page <= 5  %}

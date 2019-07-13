@@ -2,10 +2,10 @@ import os
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request, send_from_directory
 from werkzeug.urls import url_parse
-from app.forms import LoginForm, RegistrationForm, PostForm, DeleteUserSub, DeletePostSub
+from app.forms import *
 # user db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, Mat, Post
+from app.models import User, Mat, Post, Mat_result
 
 per_page = 10
 
@@ -90,6 +90,36 @@ def logout():
 def mat():
     mat_papers = Mat.query.order_by(Mat.name.desc()).all()
     return render_template('mat.html', title='MAT', papers=mat_papers)
+
+
+@app.route('/mat/my_result')
+@login_required
+def mat_my_results():
+    user = current_user
+    data = []
+    mats = Mat.query.order_by(Mat.name.desc()).all()
+    for mat in mats:
+        m = {}
+        data.append(m)
+        m['name'] = mat.name
+        m['results'] = []
+        for result in mat.results.order_by(Mat_result.user_id).all():
+            if result.student == user:
+                r = {}
+                r['id'] = result.student.id
+                r['result_id'] = result.id
+                r['timestamp'] = result.timestamp
+                r['1'] = result.q1_score
+                r['2'] = result.q2_score
+                r['3'] = result.q3_score
+                r['4'] = result.q1_score
+                r['5'] = result.q1_score
+                r['6'] = result.q1_score
+                r['7'] = result.q7_score
+                r['total'] = result.total_score
+                m['results'].append(r)
+
+    return render_template('mat_management_user.html', title='My MAT Results', mats=data, user=user)
 
 
 @app.route('/user/<username>/<page>')
@@ -184,6 +214,7 @@ def admin_requirement(f):
     from functools import wraps
     @wraps(f)
     def wrap(*args, **kwargs):
+        '''
         try:
             if current_user.is_admin:
                 return f(*args, **kwargs)
@@ -191,13 +222,20 @@ def admin_requirement(f):
                 flash('You have no access to admin contents.')
                 return redirect(url_for('index'))
         except Exception as e:
-            print(e)
-            flash(e.args)
+            raise e
+            #print(e)
+            #flash(e.args)
+            return redirect(url_for('index'))
+        '''
+        if current_user.is_admin:
+            return f(*args, **kwargs)
+        else:
+            flash('You have no access to admin contents.')
             return redirect(url_for('index'))
     return wrap
 
 
-@app.route('/user_management')
+@app.route('/management/user_management')
 @login_required
 @admin_requirement
 def user_management():
@@ -205,33 +243,46 @@ def user_management():
     return render_template('user_management.html', title='User Management',
                            users=users)
 
-@app.route('/user_management/delete/<username>', methods=['GET', 'POST'])
+
+@app.route('/management/user_management/delete/<username>', methods=['GET', 'POST'])
 @login_required
 @admin_requirement
 def delete_user_confirm(username):
-    form = DeleteUserSub()
+    form = DeleteSub()
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first_or_404()
         user.delete()
         flash('User {} has been deleted.'.format(username))
         return redirect(url_for('user_management'))
-    return render_template('delete_user_confirm.html', title='Delete User {}'.format(username), form=form)
+    return render_template('delete_confirm.html',
+                           title='Delete User {}'.format(username),
+                           form=form,
+                           message="Deleting a user is not recoverable.",
+                           back="User Management",
+                           back_url=url_for('user_management')
+                           )
 
 
-@app.route('/user_management/delete_user_post/<username>', methods=['GET', 'POST'])
+@app.route('/management/user_management/delete_user_post/<username>', methods=['GET', 'POST'])
 @login_required
 @admin_requirement
 def delete_user_post_confirm(username):
-    form = DeletePostSub()
+    form = DeleteSub()
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first_or_404()
         user.delete_posts()
         flash('Messages posted by user {} has been deleted.'.format(username))
         return redirect(url_for('user_management'))
-    return render_template('delete_user_post_confirm.html', title='Delete Posts by {}'.format(username), form=form)
+    return render_template('delete_confirm.html',
+                           title='Delete Posts by {}'.format(username),
+                           form=form,
+                           message="Deleting posts is not recoverable.",
+                           back="User Management",
+                           back_url=url_for('user_management')
+                           )
 
 
-@app.route('/user_management/change_admin/<username>')
+@app.route('/management/user_management/change_admin/<username>')
 @login_required
 @admin_requirement
 def change_admin(username):
@@ -239,7 +290,8 @@ def change_admin(username):
     user.change_admin()
     return redirect(url_for('user_management'))
 
-@app.route('/student_management', methods=['GET', 'POST'])
+
+@app.route('/management/student_management', methods=['GET', 'POST'])
 @login_required
 @admin_requirement
 def student_management():
@@ -248,4 +300,233 @@ def student_management():
                            students=students)
 
 
+@app.route('/management/mat_management')
+@login_required
+@admin_requirement
+def mat_management():
+    data = []
+    mats = Mat.query.order_by(Mat.name.desc()).all()
+    for mat in mats:
+        m = {}
+        data.append(m)
+        m['name'] = mat.name
+        m['results'] = []
+        prev_id = 0
+        prev_timestamp = 0
+        for result in mat.results.order_by(Mat_result.user_id).all():
+            r = {}
+            r['user'] = result.student
+            r['id'] = result.student.id
+            r['result_id'] = result.id
+            r['timestamp'] = result.timestamp
+            r['1'] = result.q1_score
+            r['2'] = result.q2_score
+            r['3'] = result.q3_score
+            r['4'] = result.q1_score
+            r['5'] = result.q1_score
+            r['6'] = result.q1_score
+            r['7'] = result.q7_score
+            r['total'] = result.total_score
 
+            if prev_id == r['id']:
+                if result.timestamp > prev_timestamp:
+                    m['results'][-1] = r
+            else:
+                m['results'].append(r)
+            prev_id = r['id']
+            prev_timestamp = result.timestamp
+    return render_template('mat_management.html', title='Mat Management',
+                           mats=data)
+
+
+@app.route('/mat_management/user/<username>')
+@login_required
+@admin_requirement
+def mat_management_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    data = []
+    mats = Mat.query.order_by(Mat.name.desc()).all()
+    for mat in mats:
+        m = {}
+        data.append(m)
+        m['name'] = mat.name
+        m['results'] = []
+        for result in mat.results.order_by(Mat_result.user_id).all():
+            if result.student == user:
+                r = {}
+                r['id'] = result.student.id
+                r['result_id'] = result.id
+                r['timestamp'] = result.timestamp
+                r['1'] = result.q1_score
+                r['2'] = result.q2_score
+                r['3'] = result.q3_score
+                r['4'] = result.q1_score
+                r['5'] = result.q1_score
+                r['6'] = result.q1_score
+                r['7'] = result.q7_score
+                r['total'] = result.total_score
+
+                m['results'].append(r)
+
+    return render_template('mat_management_user.html', title='MAT Management:{}'.format(username), mats=data, user=user)
+
+
+@app.route('/management/mat_management/delete/<id>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def delete_mat_result_confirm(id):
+    form = DeleteSub()
+    if form.validate_on_submit():
+        result = Mat_result.query.filter_by(id=id).first_or_404()
+        result.delete()
+        flash('MAT result has been deleted.')
+        return redirect(url_for('mat_management'))
+    return render_template('delete_confirm.html',
+                           title='Delete MAT Result',
+                           form=form,
+                           message="Deleting an MAT result is not recoverable.",
+                           back="MAT Management",
+                           back_url=url_for('mat_management')
+                           )
+
+
+@app.route('/management/mat_management/availability/<paper_name>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def mat_availability(paper_name):
+    paper = Mat.query.filter_by(name=paper_name).first_or_404()
+    form = MatForm()
+    users = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form.students.choices = choices
+    if request.method == 'GET':
+        default = [
+            student.id for student in paper.viewers if not student.is_admin]
+        form.students.default = default
+        form.process()
+    if form.validate_on_submit():
+        res = form.students.data
+        for student in users:
+            if student.id in res and paper not in student.mats:
+                student.mats.append(paper)
+            if student.id not in res and paper in student.mats:
+                student.mats.remove(paper)
+        db.session.commit()
+        return redirect(url_for('mat_management'))
+    return render_template('mat_availability.html',
+                           title='Set MAT Availability',
+                           paper=paper,
+                           form=form)
+
+
+@app.route('/management/mat_management/add_result/<paper_name>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def mat_result_create(paper_name):
+    paper = Mat.query.filter_by(name=paper_name).first_or_404()
+    users = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form = MatResultForm()
+    form.student.choices = choices
+    if form.validate_on_submit() and form.validate():
+        student = form.student.data
+        user = User.query.filter_by(id=student).first_or_404()
+        q1 = form.q1_answer.data
+        q2 = form.q2_score.data
+        q3 = form.q3_score.data
+        q4 = form.q4_score.data
+        q5 = form.q5_score.data
+        q6 = form.q6_score.data
+        q7 = form.q7_score.data
+        r = Mat_result()
+        paper.results.append(r)
+        user.mat_results.append(r)
+        r.update_all(q1, q2, q3, q4, q5, q6, q7)
+        r.paper_name = paper.name
+        db.session.commit()
+        return redirect(url_for('mat_management'))
+    return render_template('mat_result_add_edit.html',
+                           title='Create an MAT Result',
+                           paper=paper,
+                           type=1,
+                           form=form)
+
+
+@app.route('/management/mat_management/edit_result/<id>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def mat_result_edit(id):
+    result = Mat_result.query.filter_by(id=id).first_or_404()
+    paper = result.paper
+    user = result.student
+    users = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form = MatResultForm()
+    form.student.choices = choices
+    if request.method == "GET":
+        form.student.default = user.id
+        form.q1_answers.default = result.q1_answers
+        form.q2_score.default = result.q2_score
+        form.q3_score.default = result.q3_score
+        form.q4_score.default = result.q4_score
+        form.q5_score.default = result.q5_score
+        form.q6_score.default = result.q6_score
+        form.q7_score.default = result.q7_score
+        form.process()
+    if request.method == "POST":
+        form.student.data = user.id
+    if form.validate_on_submit() and form.validate():
+        q1 = form.q1_answers.data
+        q2 = form.q2_score.data
+        q3 = form.q3_score.data
+        q4 = form.q4_score.data
+        q5 = form.q5_score.data
+        q6 = form.q6_score.data
+        q7 = form.q7_score.data
+        result.update_all(q1, q2, q3, q4, q5, q6, q7)
+        db.session.commit()
+        return redirect(url_for('mat_management'))
+    return render_template('mat_result_add_edit.html',
+                           title='Edit an MAT Result',
+                           paper=paper,
+                           user=user,
+                           type=2,
+                           form=form)
+
+
+@app.route('/management/mat_management/add_result/<paper_name>/<username>', methods=['GET', 'POST'])
+@login_required
+@admin_requirement
+def mat_result_create_user(paper_name, username):
+    paper = Mat.query.filter_by(name=paper_name).first_or_404()
+    user = User.query.filter_by(username=username).first_or_404()
+    users = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form = MatResultForm()
+    form.student.choices = choices
+    if request.method == "GET":
+        form.student.default = user.id
+        form.process()
+    if request.method == "POST":
+        form.student.data = user.id
+    if form.validate_on_submit() and form.validate():
+        q1 = form.q1_answers.data
+        q2 = form.q2_score.data
+        q3 = form.q3_score.data
+        q4 = form.q4_score.data
+        q5 = form.q5_score.data
+        q6 = form.q6_score.data
+        q7 = form.q7_score.data
+        r = Mat_result()
+        paper.results.append(r)
+        user.mat_results.append(r)
+        r.update_all(q1, q2, q3, q4, q5, q6, q7)
+        r.paper_name = paper.name
+        db.session.commit()
+        return redirect(url_for('mat_management_user', username=user.username))
+    return render_template('mat_result_add_edit.html',
+                           title='Edit an MAT Result',
+                           paper=paper,
+                           user=user,
+                           type=3,
+                           form=form)

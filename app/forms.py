@@ -1,6 +1,7 @@
 # forms
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectMultipleField, SelectField
+from flask_wtf.file import FileAllowed, FileRequired
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectMultipleField, SelectField, FileField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, AnyOf, Optional, Regexp
 from app.models import User
 
@@ -28,9 +29,9 @@ class MatResultForm(FlaskForm):
     student = SelectField('Select a Student', coerce=int,
                           validators=[DataRequired()])
     q1_answers = StringField('Q1 Answers (Input letters only. "f" for empty)',
-                            validators=[DataRequired(), Regexp(regex='^[A-Fa-f]{10}$',
-                                                               message="Number of answers is incorrect or you have entered aletter not from a to f.")],
-                            default='ffffffffff')
+                             validators=[DataRequired(), Regexp(regex='^[A-Fa-f]{10}$',
+                                                                message="Number of answers is incorrect or you have entered aletter not from a to f.")],
+                             default='ffffffffff')
     q2_score = StringField('Q2 Score', validators=[DataRequired()], default=0)
     q3_score = StringField('Q3 Score', validators=[DataRequired()], default=0)
     q4_score = StringField('Q4 Score', validators=[DataRequired()], default=0)
@@ -92,3 +93,16 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email address.')
+
+
+class PsUploadForm(FlaskForm):
+    file_upload = FileField('Choose a File to Upload',
+                            validators=[FileRequired(),
+                                        FileAllowed(['doc', 'docx', 'page',
+                                                     'pdf', 'txt', 'md'],
+                                                    'Document Extensions Only')
+                                        ]
+                            )
+    owner = SelectField('Select a Student', coerce=int,
+                        validators=[DataRequired()])
+    submit = SubmitField('Upload')

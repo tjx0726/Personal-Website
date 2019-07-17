@@ -2,10 +2,11 @@ import os
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request, send_from_directory
 from werkzeug.urls import url_parse
+from werkzeug.utils import secure_filename
 from app.forms import *
 # user db
 from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User, Mat, Post, Mat_result
+from app.models import User, Mat, Post, Mat_result, Ps_files
 
 per_page = 10
 
@@ -24,6 +25,29 @@ def mat_files(filename):
         return send_from_directory(
             os.path.join(app.instance_path, 'protected/files/mat'),
             filename)
+
+
+@app.route('/protected/files/ps/<username>/<filename>')
+@login_required
+def ps_files(username, filename):
+    allowed = False
+    if current_user.username == username:
+        allowed = True
+    for ps in current_user.ps_own:
+        if ps.file_name == filename:
+            allowed = True
+    for ps in current_user.ps_by_me:
+        if ps.file_name == filename:
+            allowed = True
+    print(allowed)
+
+    if 'websolutions' in filename and not allowed and not current_user.is_admin:
+        flash("You don't have access to {}".format(filename))
+        return redirect('ps_management')
+    else:
+        return send_from_directory(
+            os.path.join(app.instance_path,
+                         'protected/files/ps/{}'.format(username)), filename)
 
 
 @app.route('/')
@@ -59,12 +83,16 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        new_user = User(username=form.username.data, email=form.email.data,
+        username = form.username.data
+        new_user = User(username=username, email=form.email.data,
                         firstname=form.firstname.data, lastname=form.lastname.data)
         new_user.set_password(form.password.data)
         specs = Mat.query.filter(Mat.name.contains('Spec')).all()
         for paper in specs:
             new_user.mats.append(paper)
+        # mkdir for this user
+        os.mkdir(os.path.join(app.instance_path,
+                              'protected/files/ps/{}'.format(username)))
         db.session.add(new_user)
         db.session.commit()
         if current_user.is_admin:
@@ -431,7 +459,7 @@ def mat_result_create(paper_name):
     if form.validate_on_submit() and form.validate():
         student = form.student.data
         user = User.query.filter_by(id=student).first_or_404()
-        q1 = form.q1_answer.data
+        q1 = form.q1_answers.data
         q2 = form.q2_score.data
         q3 = form.q3_score.data
         q4 = form.q4_score.data
@@ -443,6 +471,7 @@ def mat_result_create(paper_name):
         user.mat_results.append(r)
         r.update_all(q1, q2, q3, q4, q5, q6, q7)
         r.paper_name = paper.name
+        db.session.add(r)
         db.session.commit()
         return redirect(url_for('mat_management'))
     return render_template('mat_result_add_edit.html',
@@ -522,6 +551,7 @@ def mat_result_create_user(paper_name, username):
         user.mat_results.append(r)
         r.update_all(q1, q2, q3, q4, q5, q6, q7)
         r.paper_name = paper.name
+        db.session.add(r)
         db.session.commit()
         return redirect(url_for('mat_management_user', username=user.username))
     return render_template('mat_result_add_edit.html',
@@ -529,4 +559,194 @@ def mat_result_create_user(paper_name, username):
                            paper=paper,
                            user=user,
                            type=3,
+                           form=form)
+
+
+@app.route('/ps/review')
+@login_required
+def ps_review():
+    user = current_user
+    ps = user.ps_own.order_by(Ps_files.timestamp).all()
+    data = []
+    for p in ps:
+        print(p.file_name)
+        data.append(p)
+
+    return render_template('ps_review.html', title='Review My PS', data=data)
+
+
+@app.route('/management/ps_management/review')
+@login_required
+@admin_requirement
+def ps_management():
+    # user = current_user
+    users = User.query.filter_by(is_admin=False).order_by(User.id).all()
+    data = []
+    for u in users:
+        d = {}
+        d['user'] = u
+        d['ps'] = u.ps_own.order_by(Ps_files.timestamp).all()
+        data.append(d)
+
+    return render_template('ps_review_all.html', title='Review PS', data=data)
+
+
+@app.route('/management/ps_management/review/user/<username>')
+@login_required
+@admin_requirement
+def ps_management_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    users = [user]
+    data = []
+    for u in users:
+        d = {}
+        d['user'] = u
+        d['ps'] = u.ps_own.order_by(Ps_files.timestamp).all()
+        data.append(d)
+
+    return render_template('ps_review_all.html', title='Review PS:{}'.format(username), data=data)
+
+
+@app.route('/ps/delete/<id>', methods=['GET', 'POST'])
+@login_required
+def ps_delete(id):
+    ps = Ps_files.query.filter_by(id=id).first_or_404()
+    if ps.owner == current_user or current_user.is_admin:
+        form = DeleteSub()
+        if form.validate_on_submit():
+            ps.delete()
+            flash('PS file {} has been deleted.'.format(ps.file_name))
+            return redirect(url_for('ps_review'))
+        return render_template('delete_confirm.html',
+                               title='Delete PS file {}'.format(ps.file_name),
+                               form=form,
+                               message="Deleting a PS file is not recoverable.",
+                               back="PS Review",
+                               back_url=url_for('ps_review')
+                               )
+
+    else:
+        flash('You have no access to this file.')
+        return redirect(url_for('index'))
+
+
+@app.route('/ps/upload', methods=['GET', 'POST'])
+@login_required
+def ps_upload():
+    user = current_user
+    users = User.query.order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form = PsUploadForm()
+    form.owner.choices = choices
+    if request.method == "GET":
+        form.owner.default = user.id
+        form.process()
+    if request.method == "POST":
+        form.owner.data = user.id
+        print(form.owner.data)
+    if form.validate_on_submit():
+        f = form.file_upload.data
+        filename = secure_filename(f.filename)
+        ps = Ps_files.query.filter_by(file_name=filename).first()
+        if ps is None:
+            f.save(os.path.join(app.instance_path,
+                                'protected/files/ps/{}'.format(user.username), filename))
+            ps = Ps_files()
+            ps.file_name = filename
+            user.ps_by_me.append(ps)
+            user.ps_own.append(ps)
+
+            db.session.add(ps)
+            db.session.commit()
+            flash('You have successfully uploaded your PS file {}'.format(filename))
+            return redirect(url_for('ps_review'))
+        else:
+            flash('File name exists, please edit your file name.')
+            return redirect(url_for('ps_upload'))
+    return render_template('ps_upload.html',
+                           title='Upload a PS File',
+                           mode=0,
+                           user=user,
+                           form=form)
+
+
+@app.route('/management/ps_management/upload', methods=['GET', 'POST'])
+@login_required
+def ps_upload_general():
+    users = User.query.order_by(User.id).all()
+    choices = []
+    for u in users:
+        if u.is_admin:
+            choices.append((u.id, "{} {}".format(u.firstname, u.lastname)))
+        else:
+            choices.append(
+                (u.id, "{} {} (stu)".format(u.firstname, u.lastname)))
+
+    form = PsUploadForm()
+    form.owner.choices = choices
+    if form.validate_on_submit():
+        username = form.owner.data
+        user = User.query.filter_by(username=username).first_or_404()
+        f = form.file_upload.data
+        filename = secure_filename(f.filename)
+        ps = Ps_files.query.filter_by(file_name=filename).first()
+        if ps is None:
+            f.save(os.path.join(app.instance_path,
+                                'protected/files/ps/{}'.format(user.username), filename))
+            ps = Ps_files()
+            ps.file_name = filename
+            user.ps_by_me.append(ps)
+            user.ps_own.append(ps)
+
+            db.session.add(ps)
+            db.session.commit()
+            flash('You have successfully uploaded your PS file {}'.format(filename))
+            return redirect(url_for('ps_review'))
+        else:
+            flash('File name exists, please edit your file name.')
+            return redirect(url_for('ps_upload'))
+    return render_template('ps_upload.html',
+                           title='Upload a PS File',
+                           mode=1,
+                           user=current_user,
+                           form=form)
+
+
+@app.route('/management/ps_management/upload/user/<username>', methods=['GET', 'POST'])
+@login_required
+def ps_upload_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    users = User.query.order_by(User.id).all()
+    choices = [(u.id, "{} {}".format(u.firstname, u.lastname)) for u in users]
+    form = PsUploadForm()
+    form.owner.choices = choices
+    if request.method == "GET":
+        form.owner.default = user.id
+        form.process()
+    if request.method == "POST":
+        form.owner.data = user.id
+        print(form.owner.data)
+    if form.validate_on_submit():
+        f = form.file_upload.data
+        filename = secure_filename(f.filename)
+        ps = Ps_files.query.filter_by(file_name=filename).first()
+        if ps is None:
+            f.save(os.path.join(app.instance_path,
+                                'protected/files/ps/{}'.format(user.username), filename))
+            ps = Ps_files()
+            ps.file_name = filename
+            user.ps_by_me.append(ps)
+            user.ps_own.append(ps)
+
+            db.session.add(ps)
+            db.session.commit()
+            flash('You have successfully uploaded your PS file {}'.format(filename))
+            return redirect(url_for('ps_review'))
+        else:
+            flash('File name exists, please edit your file name.')
+            return redirect(url_for('ps_upload'))
+    return render_template('ps_upload.html',
+                           title='Upload a PS File for {}'.format(username),
+                           mode=2,
+                           user=user,
                            form=form)

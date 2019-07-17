@@ -1,7 +1,7 @@
 from app import app, db
-from app.models import User, Post, Mat, Mat_result
+from app.models import User, Post, Mat, Mat_result, Ps_files
 
 @app.shell_context_processor
 def make_shell_context():
     return {'db': db, 'User': User, 'Post': Post, 'Mat': Mat, 'Mat_result':
-            Mat_result}
+            Mat_result, 'Ps': Ps_files}

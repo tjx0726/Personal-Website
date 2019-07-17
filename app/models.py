@@ -1,4 +1,4 @@
-from app import db, login
+from app import db, login, app
 # Flask-Login user mixin class
 from flask_login import UserMixin
 # timestamp
@@ -6,6 +6,8 @@ from datetime import datetime
 # password validation - hashing
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
+import os
 
 # Association for User-Mat many to many relationship
 user_mat_association = db.Table('UserMat',
@@ -34,7 +36,12 @@ class User(UserMixin, db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     mats = db.relationship('Mat', secondary=user_mat_association,
                            back_populates='viewers')
-    mat_results = db.relationship('Mat_result', backref='student', lazy='dynamic')
+    mat_results = db.relationship(
+        'Mat_result', backref='student', lazy='dynamic')
+    ps_own = db.relationship("Ps_files", backref='owner', lazy='dynamic',
+                             foreign_keys='Ps_files.user_id_owner')
+    ps_by_me = db.relationship("Ps_files", backref='author',
+                               lazy='dynamic', foreign_keys='Ps_files.user_id_author')
 
     def __repr__(self):
         return '<User {}, {} {}>'.format(self.username, self.firstname, self.lastname)
@@ -69,6 +76,12 @@ class User(UserMixin, db.Model):
         self.delete_mat_scores()
         db.session.delete(self)
         db.session.commit()
+
+    def delete_ps(self):
+        for ps in self.ps_own:
+            ps.delete()
+        for ps in self.ps_by_me:
+            ps.delete()
 
     def delete_posts(self):
         for p in self.posts:
@@ -128,7 +141,8 @@ class Mat(db.Model):
     answer_path = db.Column(db.String(128))
     viewers = db.relationship('User', secondary=user_mat_association,
                               back_populates='mats')
-    results = db.relationship('Mat_result', backref='paper', lazy='dynamic')
+    results = db.relationship('Mat_result', backref='paper', lazy='dynamic',
+                              foreign_keys='Mat_result.mat_name')
     correct_answer = db.Column(db.String(10))
 
     def __repr__(self):
@@ -153,7 +167,7 @@ class Mat_result(db.Model):
     q5_score = db.Column(db.Integer, default=0)
     q6_score = db.Column(db.Integer, default=0)
     q7_score = db.Column(db.Integer, default=0)
-    total_score = db.Column(db.Integer, default=0)
+    total_score = db.Column(db.Integer, default=0, index=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     __table_args__ = (
@@ -250,5 +264,27 @@ class Mat_result(db.Model):
         return res
 
     def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+
+class Ps_files(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    # foreign key referenced to user.id
+    user_id_owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id_author = db.Column(db.Integer, db.ForeignKey('user.id'))
+    file_name = db.Column(db.String(50), index=True)
+
+    def delete(self):
+        if self.owner is not None and self.file_name is not None:
+            path = os.path.join(app.instance_path, 'protected/files/ps/{}/{}'.format(self.owner.username,
+                                                                                     self.file_name))
+
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                print('File not found')
+
         db.session.delete(self)
         db.session.commit()

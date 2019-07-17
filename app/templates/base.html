@@ -27,23 +27,51 @@
                 </div>
 
                 <ul class="list-unstyled components">
-                    <a href="{{ url_for('index') }}"><p>Home</p></a>
-                    <li class="active">
-                        <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Home</a>
-                        <ul class="collapse list-unstyled" id="homeSubmenu">
+                    <li>
+                        <a href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <hr>
+                    <li>
+                        <a href="#">About Me</a>
+                    </li>
+                    <li>
+                        <a href="#">Information</a>
+                    </li>
+                    <li>
+                        <a href="#">Timetable</a>
+                    </li>
+                    <li>
+                        <a href="#cmSubmenu" data-toggle="collapse"
+                            aria-expanded="false"
+                            class="dropdown-toggle">Courese Materials</a>
+
+                        <ul class="collapse list-unstyled" id="cmSubmenu">
                             <li>
-                                <a href="#">Home 1</a>
+                                <a href="#">Mathematics</a>
                             </li>
                             <li>
-                                <a href="#">Home 2</a>
+                                <a href="#">Logics</a>
                             </li>
                             <li>
-                                <a href="#">Home 3</a>
+                                <a href="#">Computer Science</a>
+                            </li>
+                            <li>
+                                <a href="#">Others</a>
                             </li>
                         </ul>
                     </li>
+                    
                     <li>
-                        <a href="#">About</a>
+                        <a href="#psSubmenu" data-toggle="collapse"
+                            aria-expanded="false" class="dropdown-toggle">PS</a>
+                        <ul class="collapse list-unstyled" id="psSubmenu">
+                            <li>
+                                <a href="{{ url_for('ps_review') }}">My PS</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('ps_upload') }}">Upload PS</a>
+                            </li>
+                        </ul>
                     </li>
                     <li>
                         <a href="#matSubmenu" data-toggle="collapse"
@@ -58,9 +86,6 @@
                                 <a href="{{ url_for('mat_my_results')}}">My Results</a>
                             </li>
                             {% endif %}
-                            <li>
-                                <a href="#">Page 3</a>
-                            </li>
                         </ul>
                     </li>
                     <li>
@@ -83,7 +108,7 @@
                                 <a href="#">Timetable Management</a>
                             </li>
                             <li>
-                                <a href="#">Review PS</a>
+                                <a href="{{ url_for('ps_management')}}">Review PS</a>
                             </li>
                     </li>
 					{% endif %}

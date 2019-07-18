@@ -32,10 +32,10 @@
                     </li>
                     <hr>
                     <li>
-                        <a href="#">About Me</a>
+                        <a href="{{ url_for('about_me') }}">About Me</a>
                     </li>
                     <li>
-                        <a href="#">Information</a>
+                        <a href="{{ url_for('information')}}">Information</a>
                     </li>
                     <li>
                         <a href="#cmSubmenu" data-toggle="collapse"
@@ -44,16 +44,16 @@
 
                         <ul class="collapse list-unstyled" id="cmSubmenu">
                             <li>
-                                <a href="#">Mathematics</a>
+                                <a href="{{ url_for('math') }}">Mathematics</a>
                             </li>
                             <li>
-                                <a href="#">Logics</a>
+                                <a href="{{ url_for('logic') }}">Logics</a>
                             </li>
                             <li>
-                                <a href="#">Computer Science</a>
+                                <a href="{{ url_for('cs') }}">Computer Science</a>
                             </li>
                             <li>
-                                <a href="#">Others</a>
+                                <a href="{{ url_for('others') }}">Others</a>
                             </li>
                         </ul>
                     </li>

@@ -750,3 +750,40 @@ def ps_upload_user(username):
                            mode=2,
                            user=user,
                            form=form)
+
+
+
+
+@app.route('/about_me')
+def about_me():
+    return render_template('about.html', title='About Me')
+
+
+@app.route('/information')
+def information():
+    return render_template('information.html', title='Course Information')
+
+@app.route('/course_materials/math')
+@login_required
+def math():
+    return render_template('not_available.html', title='Course Materials - Mathematics')
+
+
+@app.route('/course_materials/logic')
+@login_required
+def logic():
+    return render_template('not_available.html', title='Course Materials - Logics')
+
+
+@app.route('/course_materials/cs')
+@login_required
+def cs():
+    return render_template('not_available.html', title='Course Materials - Computer Science')
+
+
+
+
+@app.route('/course_materials/others')
+@login_required
+def others():
+    return render_template('not_available.html', title='Course Materials - Others')

@@ -1,6 +1,6 @@
 Flask_Login==0.4.1
 Flask_SQLAlchemy==2.4.0
-Werkzeug==0.14.1
+Werkzeug==0.15.3
 Flask==1.0.2
 WTForms==2.2.1
 alembic==1.0.11

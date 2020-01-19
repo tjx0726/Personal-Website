@@ -84,6 +84,24 @@ class RegistrationForm(FlaskForm):
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 
+
+    def validate(self):
+        if not FlaskForm.validate(self):
+            return False
+        res = True
+        for v in [self.username, self.firstname, self.lastname, self.email, self.password]:
+            res = res and self.validate_one(v)
+        return res
+
+    def validate_one(self, v):
+        if all(ord(c) < 128 for c in v.data):
+            return True
+        else:
+            v.errors.append('Only ascii characters are allowed')
+            return False
+
+
+
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
@@ -99,10 +117,18 @@ class PsUploadForm(FlaskForm):
     file_upload = FileField('Choose a File to Upload',
                             validators=[FileRequired(),
                                         FileAllowed(['doc', 'docx', 'page',
-                                                     'pdf', 'txt', 'md'],
+                                                     'pdf', 'txt', 'md', 'pages'],
                                                     'Document Extensions Only')
                                         ]
                             )
     owner = SelectField('Select a Student', coerce=int,
                         validators=[DataRequired()])
+    submit = SubmitField('Upload')
+
+
+
+class UploadForm(FlaskForm):
+    file_upload = FileField('Choose a File to Upload',
+                            validators=[FileRequired()]
+                            )
     submit = SubmitField('Upload')

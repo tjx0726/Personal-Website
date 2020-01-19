@@ -2,6 +2,18 @@
                     <span class='datetime'>{{result['timestamp']}}</span>
                 </td>
                 <td>
+			{% for q in result['1_correct']%}
+			{% if q == 1%}
+				<font color="#00FF00">
+			{% else%}
+				<font color="#FF0000">
+			{% endif%}
+			■</font>
+			{% endfor%}
+
+
+                </td>
+                <td>
                     {{result['1']}}
                 </td>
                 <td>
@@ -38,11 +50,3 @@
                     </a></u>
                 </td>
                 {% endif %}
-
-<script>
-var ds = document.getElementsByClassName("datetime")
-for (var i = 0; i < ds.length; i++) {
-    var d = ds[i]
-    d.innerHTML = moment(d.textContent).format('LL');
-}
-</script>

@@ -249,8 +249,8 @@ class Mat_result(db.Model):
         elif n == 7:
             prev_score = self.q7_score
             self.q7_score = score
-        self.total_score -= prev_score
         self.total_score += score
+        self.total_score -= prev_score
         db.session.commit()
 
     def get_correct_q1_answer(self):
@@ -260,7 +260,6 @@ class Mat_result(db.Model):
                 res.append(1)
             else:
                 res.append(0)
-        print(res)
         return res
 
     def delete(self):

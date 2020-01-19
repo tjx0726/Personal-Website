@@ -43,4 +43,13 @@
         {% endif %}
         <hr>
     {% endfor %}
+
+
+<script>
+var ds = document.getElementsByClassName("datetime")
+for (var i = 0; i < ds.length; i++) {
+    var d = ds[i]
+    d.innerHTML = moment(d.textContent).add(8, 'hours').format('LL');
+}
+</script>
 {% endblock%}

@@ -15,7 +15,7 @@
         <script defer src="{{ url_for('static', filename='scripts/js/solid.js') }}"></script>
         <script defer src="{{ url_for('static', filename='scripts/js/fontawesome.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/js/moment.js') }}"></script>
-        <script>moment.locale('en-gb');</script>
+        <script>moment.locale('zh-cn');</script>
 
     </head>
     <body>
@@ -93,16 +93,19 @@
                         <a href="#adminSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Admin Management</a>
                         <ul class="collapse list-unstyled" id="adminSubmenu">
                             <li>
-								<a href="{{ url_for('user_management')}}">User Management</a>
+				<a href="{{ url_for('user_management')}}">User Management</a>
                             </li>
                             <li>
-								<a href="{{ url_for('student_management')}}">Student Management</a>
+				<a href="{{ url_for('student_management')}}">Student Management</a>
                             </li>
                             <li>
                                 <a href="{{ url_for('mat_management')}}">MAT Management</a>
                             </li>
                             <li>
                                 <a href="{{ url_for('ps_management')}}">Review PS</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('upload_materials')}}">Upload Materials</a>
                             </li>
                     </li>
 					{% endif %}

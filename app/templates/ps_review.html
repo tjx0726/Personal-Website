@@ -6,8 +6,8 @@
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">Filename</th>
-                <th scope="col">Time Uploaded</th>
+                <th scope="col" width="350">Filename</th>
+                <th scope="col" width="270">Time Uploaded</th>
                 <th scope="col">Delete</th>
             </tr>    
         </thead>
@@ -30,4 +30,13 @@
     {% else %}
     <h5>There is no PS yet.</5>
     {% endif %}
+
+
+<script>
+var ds = document.getElementsByClassName("datetime")
+for (var i = 0; i < ds.length; i++) {
+    var d = ds[i]
+    d.innerHTML = moment(d.textContent).add(8, 'hours').format('LLL');
+}
+</script>
 {% endblock%}

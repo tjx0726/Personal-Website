@@ -1,5 +1,5 @@
 <td>
-    {% if ps.author != current_user%}
+    {% if ps.author != ps.owner%}
         [RE] 
     {% endif %}
     
@@ -14,11 +14,3 @@
 </td>
 
 
-
-<script>
-var ds = document.getElementsByClassName("datetime")
-for (var i = 0; i < ds.length; i++) {
-    var d = ds[i]
-    d.innerHTML = moment(d.textContent).format('LLL');
-}
-</script>

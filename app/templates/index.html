@@ -3,6 +3,10 @@
 {% block content %}
     {% if not current_user.is_anonymous %}
     <h3>Welcome back, {{ current_user.firstname }}!</h3>
+   
+    <div class="alert alert-info" role="alert">
+	    请同学们尽快上传自己的PS素材材料。<a href= "{{url_for('ps_upload')}}" class="btn btn-primary" role="button">Upload</a>
+    </div>
     {% else %}
     <h3>Hi</h3>
     {% endif %}

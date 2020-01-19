@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if not current_user.is_anonymous %}
+    <h3>Mathematics</h3>
+        <table class="table">
+
+            <thead>
+            <tr>
+                <th scope="col">File</th>
+                <th scope="col">Contents</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+		    <td>
+			    <u>
+			    <a href="{{url_for('static', filename='files/Math_Day_2_compressed.pdf')}}">Day 2</a>
+			    </u>
+		    </td>
+		    <td>
+			    Functions, Graph Sketching and Differentiation
+		    </td>
+	    </tr>
+	    <tr>
+		    <td>
+			    <u>
+			    <a href="{{url_for('static', filename='files/Math_Day_3_compressed.pdf')}}">Day 3</a>
+			    </u>
+		    </td>
+		    <td>
+			    Differentiation and Integration
+		    </td>
+	    </tr>
+	    </table>
+
+   
+    {% endif %}
+{% endblock%}

@@ -16,7 +16,8 @@ per_page = 10
 def mat_files(filename):
     allowed = False
     for p in current_user.mats:
-        if p.answer_path == '/files/mat/'+filename:
+        print(p.answer_path)
+        if p.answer_path == filename:
             allowed = True
     if 'websolutions' in filename and not allowed and not current_user.is_admin:
         flash("You don't have access to {}".format(filename))
@@ -95,10 +96,6 @@ def register():
                               'protected/files/ps/{}'.format(username)))
         db.session.add(new_user)
         db.session.commit()
-        if current_user.is_admin:
-            new_user.post('Hi')
-            flash('You have added a new user {}.'.format(new_user.username))
-            return redirect(url_for('user_management'))
         new_user.post('Hi everyone, I have registered this account.')
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
@@ -137,12 +134,13 @@ def mat_my_results():
                 r['id'] = result.student.id
                 r['result_id'] = result.id
                 r['timestamp'] = result.timestamp
+                r['1_correct'] = result.get_correct_q1_answer()
                 r['1'] = result.q1_score
                 r['2'] = result.q2_score
                 r['3'] = result.q3_score
-                r['4'] = result.q1_score
-                r['5'] = result.q1_score
-                r['6'] = result.q1_score
+                r['4'] = result.q4_score
+                r['5'] = result.q5_score
+                r['6'] = result.q6_score
                 r['7'] = result.q7_score
                 r['total'] = result.total_score
                 m['results'].append(r)
@@ -280,6 +278,8 @@ def delete_user_confirm(username):
     if form.validate_on_submit():
         user = User.query.filter_by(username=username).first_or_404()
         user.delete()
+        import shutil
+        shutil.rmtree(os.path.join(app.instance_path, 'protected/files/ps/{}'.format(username)))
         flash('User {} has been deleted.'.format(username))
         return redirect(url_for('user_management'))
     return render_template('delete_confirm.html',
@@ -341,18 +341,19 @@ def mat_management():
         m['results'] = []
         prev_id = 0
         prev_timestamp = 0
-        for result in mat.results.order_by(Mat_result.user_id).all():
+        for result in mat.results.order_by(Mat_result.total_score.desc()).all():
             r = {}
             r['user'] = result.student
             r['id'] = result.student.id
             r['result_id'] = result.id
             r['timestamp'] = result.timestamp
+            r['1_correct'] = result.get_correct_q1_answer()
             r['1'] = result.q1_score
             r['2'] = result.q2_score
             r['3'] = result.q3_score
-            r['4'] = result.q1_score
-            r['5'] = result.q1_score
-            r['6'] = result.q1_score
+            r['4'] = result.q4_score
+            r['5'] = result.q5_score
+            r['6'] = result.q6_score
             r['7'] = result.q7_score
             r['total'] = result.total_score
 
@@ -385,6 +386,7 @@ def mat_management_user(username):
                 r['id'] = result.student.id
                 r['result_id'] = result.id
                 r['timestamp'] = result.timestamp
+                r['1_correct'] = result.get_correct_q1_answer()
                 r['1'] = result.q1_score
                 r['2'] = result.q2_score
                 r['3'] = result.q3_score
@@ -647,7 +649,7 @@ def ps_upload():
     if form.validate_on_submit():
         f = form.file_upload.data
         filename = secure_filename(f.filename)
-        ps = Ps_files.query.filter_by(file_name=filename).first()
+        ps = user.ps_own.filter_by(file_name=filename).first()
         if ps is None:
             f.save(os.path.join(app.instance_path,
                                 'protected/files/ps/{}'.format(user.username), filename))
@@ -689,7 +691,7 @@ def ps_upload_general():
         user = User.query.filter_by(username=username).first_or_404()
         f = form.file_upload.data
         filename = secure_filename(f.filename)
-        ps = Ps_files.query.filter_by(file_name=filename).first()
+        ps = user.ps_own.filter_by(file_name=filename).first()
         if ps is None:
             f.save(os.path.join(app.instance_path,
                                 'protected/files/ps/{}'.format(user.username), filename))
@@ -729,7 +731,7 @@ def ps_upload_user(username):
     if form.validate_on_submit():
         f = form.file_upload.data
         filename = secure_filename(f.filename)
-        ps = Ps_files.query.filter_by(file_name=filename).first()
+        ps = user.ps_own.filter_by(file_name=filename).first()
         if ps is None:
             f.save(os.path.join(app.instance_path,
                                 'protected/files/ps/{}'.format(user.username), filename))
@@ -752,6 +754,20 @@ def ps_upload_user(username):
                            form=form)
 
 
+@app.route('/management/upload', methods=['GET', 'POST'])
+@login_required
+def upload_materials():
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.file_upload.data
+        filename = secure_filename(f.filename)
+        f.save('/root/Personal-Website/app/static/files/{}'.format(filename))
+        flash('done')
+        return redirect(url_for('upload_materials'))
+    return render_template('upload_materials.html',
+                           form=form)
+
+
 
 
 @app.route('/about_me')
@@ -766,21 +782,19 @@ def information():
 @app.route('/course_materials/math')
 @login_required
 def math():
-    return render_template('not_available.html', title='Course Materials - Mathematics')
+    return render_template('math.html', title='Course Materials - Mathematics')
 
 
 @app.route('/course_materials/logic')
 @login_required
 def logic():
-    return render_template('not_available.html', title='Course Materials - Logics')
+    return render_template('logic.html', title='Course Materials - Logics')
 
 
 @app.route('/course_materials/cs')
 @login_required
 def cs():
     return render_template('not_available.html', title='Course Materials - Computer Science')
-
-
 
 
 @app.route('/course_materials/others')
